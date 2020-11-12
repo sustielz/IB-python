@@ -29,42 +29,23 @@ class FLUID(object):
             
     def __init__(self, N=64, L=1., rho=1., mu=.01, dt=.01):
         self._L = L 
-        print(self.L)
-        self.N = N                         
+        self.N = N                     
+        self.u = np.zeros([2,N,N]) #Fluid velocity
         self.rho = rho  # Fluid density
         self.mu = mu    # viscosity 
         
-        self.dt = dt                    # Time step
-    #     tmax=1 # Run until time
-    #     clockmax=np.ceil(tmax/dt)
+        self.t = 0      # Time
+        self.dt = dt    # Time step        
         
-        
-        self.init_a()
-        self.initialize()
-    
-    def initialize(self):  ## Initialize boundary and velocity
-        self.t = 0.        ## Current time
-        N, L, ip, im, = self.N, self.L, self.ip, self.im
-        u = np.zeros([2,N,N]);
-        j = np.arange(N)
-        u[1]+=np.sin(2*np.pi*self.h*j/L)[:, np.newaxis]
-#         u[1]+=np.sin(2*np.pi*self.h*j/L)[:, np.newaxis]
-#         u[0]+=np.cos(2*np.pi*self.h*j/L)
-        u[1] = np.transpose(u[1])
-        u[0] = np.transpose(u[0])
-        self.u = u
+        self.init_a()   # Matrix for use in fluid solver
 
-        # %% Initialize animation
-        vorticity=(u[1,ip,:]-u[1,im,:]-u[0,:,ip]+u[0,:,im])/(2*self.h);
-        dvorticity=(np.max(vorticity)-np.min(vorticity))/5;
-        dvorticity = max(dvorticity, 0.1)  ## Catch error on 0 (or uniform) vorticity
-        # values= (-10*dvorticity):dvorticity:(10*dvorticity); % Get vorticity contours
-        values= np.arange(-10*dvorticity, 10*dvorticity, dvorticity); # Get vorticity contours
-        valminmax=[min(values),max(values)];
-            
+    def step_u(self, ff):
+        self.u, uu = self.fluid(self.u, ff)
+        return uu
+    
     def init_a(self):
         N = self.N
-        a = np.zeros([2,2,N,N])#, dtype=np.complex)#, dtype=np.complex128)
+        a = np.zeros([2,2,N,N])
         a[0, 0] = 1
         a[1, 1] = 1
 
@@ -95,17 +76,12 @@ class FLUID(object):
         im, ip, h = self.ip, self.im, self.h
         w=(u[:,ip,:]+u[:,im,:]+u[:,:,ip]+u[:,:,im]-4*u)/(h**2);
         return w
-    #     % im = [N,1:(N-1)] = circular version of i-1
-    #     % ip = [2:N,1]     = circular version of i+1
-    #     % N  = number of points in each space direction
-    
     
     def skew(self, u):
-        w=u*.1; #note that this is done only to make w the same size as u
+        w=u*1. #note that this is done only to make w the same size as u
         w[0]=self.sk(u,u[0]);
         w[1]=self.sk(u,u[1]);
         return w
-    
     
     def sk(self, u, g):
         ip, im, h = self.ip, self.im, self.h
@@ -123,20 +99,20 @@ class FLUID(object):
         w=u-(dt/2)*self.skew(u)+(dt/(2*rho))*ff; # Get RHS
         w=np.fft.fft(w, axis=1)
         w=np.fft.fft(w, axis=2)
-        uu[0]=a[0,0]*w[0]+a[0,1]*w[1]; # Solve for LHS
-        uu[1]=a[1,0]*w[0]+a[1,1]*w[1];
-        uu=np.fft.ifft(uu,axis=2);
-        uu=np.fft.ifft(uu,axis=1).real; #Get u at midpoint in time
+        uu[0]=a[0,0]*w[0]+a[0,1]*w[1] # Solve for LHS
+        uu[1]=a[1,0]*w[0]+a[1,1]*w[1]
+        uu=np.fft.ifft(uu,axis=2)
+        uu=np.fft.ifft(uu,axis=1).real #Get u at midpoint in time
         
         
-        w=u-dt*self.skew(uu)+(dt/rho)*ff+(dt/2)*(mu/rho)*self.laplacian(u);# Get RHS
+        w=u-dt*self.skew(uu)+(dt/rho)*ff+(dt/2)*(mu/rho)*self.laplacian(u)# Get RHS
         w=np.fft.fft(w, axis=1)
         w=np.fft.fft(w, axis=2)
-        uuu[0]=a[0,0]*w[0]+a[0,1]*w[1];# Solve for LHS
-        uuu[1]=a[1,0]*w[0]+a[1,1]*w[1];
+        uuu[0]=a[0,0]*w[0]+a[0,1]*w[1]# Solve for LHS
+        uuu[1]=a[1,0]*w[0]+a[1,1]*w[1]
        
-        uuu=np.fft.ifft(uuu,axis=2);
-        uuu=np.fft.ifft(uuu,axis=1).real; # Get u at next timestep
+        uuu=np.fft.ifft(uuu,axis=2)
+        uuu=np.fft.ifft(uuu,axis=1).real # Get u at next timestep
         return uuu, uu
    
 
@@ -145,13 +121,19 @@ class FLUID(object):
     @property
     def vorticity(self):
         u, h, ip, im = self.u, self.h, self.ip, self.im
-        return (u[1,ip,:]-u[1,im,:]-u[0,:,ip]+u[0,:,im])/(2*h);
-        
+        ii = im+1
+#         return (u[1,ip,:]-u[1,im,:]-u[0,:,ip]+u[0,:,im])/(2*h);
+        vorticity=(u[1][np.meshgrid(ip, ii)]
+                       -u[1][np.meshgrid(im,ii)]
+                       -u[0][np.meshgrid(ii,ip)]
+                       +u[0][np.meshgrid(ii,im)])/(2*self.h);
+        return vorticity
+
     def show_vorticity(self):
         vorticity=self.vorticity
         dvorticity=(np.max(vorticity)-np.min(vorticity))/5;
         dvorticity = max(dvorticity, 0.1)  ## Catch error on 0 (or uniform) vorticity
-        plt.imshow(vorticity,  vmin=-10*dvorticity, vmax=10*dvorticity, origin='lower', extent=[0, self.L, 0, self.L])
+        plt.imshow(vorticity,  vmin=-2*dvorticity, vmax=2*dvorticity, origin='lower', extent=[0, self.L, 0, self.L])
         plt.colorbar()
         
     def show_streamlines(self, cmap=None):
