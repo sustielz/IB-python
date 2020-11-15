@@ -83,12 +83,29 @@ class FLUID(object):
         w[1]=self.sk(u,u[1]);
         return w
     
+#     def sk(self, u, g):
+#         ip, im, h = self.ip, self.im, self.h
+#         ii = np.arange(self.N)
+#         return ((u[0][ip,ii]+u[0][ii,ii])*g[ip,ii]
+#                 -(u[0][im,ii]+u[0][ii,ii])*g[im,ii]
+#                 +(u[1][ii,ip]+u[1][ii,ii])*g[ii,ip]
+#                 -(u[1][ii,im]+u[1][ii,ii])*g[ii,im])/(4*h);
+
+
     def sk(self, u, g):
         ip, im, h = self.ip, self.im, self.h
-        return ((u[0,ip,:]+u[0])*g[ip,:]
-                -(u[0,im,:]+u[0])*g[im,:]
-                +(u[1,:,ip]+u[1])*g[:,ip]
-                -(u[1,:,im]+u[1])*g[:,im])/(4*h);
+#         ii = im+1
+        ii = np.arange(self.N)
+        PI = np.meshgrid(ip, ii, indexing='ij')
+        MI = np.meshgrid(im, ii, indexing='ij')
+        IM = np.meshgrid(ii, im, indexing='ij')
+        IP = np.meshgrid(ii, ip, indexing='ij')
+        II = np.meshgrid(ii, ii, indexing='ij')
+
+        return ((u[0][PI]+u[0][II])*g[PI]
+                -(u[0][MI]+u[0][II])*g[MI]
+                +(u[1][IP]+u[1][II])*g[IP]
+                -(u[1][IM]+u[1][II])*g[IM])/(4*h);
     
     # Time step the fluid
     def fluid(self, u, ff):    
