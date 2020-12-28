@@ -4,18 +4,7 @@ import matplotlib.pyplot as plt
 #### Fluid solver for periodic boundary conditions using fft
 class FLUID(object):
   
-  #### Fluid domain properties ####
-    @property  # Number of grid cells
-    def N(self): return self._N
-    
-    @N.setter
-    def N(self, N):
-        self._N = int(N)
-        self._h = self.L/(self.N)
-        self.ip = np.arange(N)+1   # Grid index shifted left
-        self.ip[-1] = 0
-        self.im = np.arange(N)-1   # Grid index shifted right
-    
+  #### Fluid domain properties ####    
     @property  # Box size
     def L(self): return self._L
     
@@ -28,8 +17,12 @@ class FLUID(object):
     def h(self): return self._h
             
     def __init__(self, N=64, L=1., rho=1., mu=.01, dt=.01):
-        self._L = L 
-        self.N = N                     
+        self.N = N 
+        self.L = L 
+        self.ip = np.arange(N)+1   # Grid index shifted left
+        self.ip[-1] = 0
+        self.im = np.arange(N)-1   # Grid index shifted right
+                            
         self.u = np.zeros([2,N,N]) #Fluid velocity
         self.rho = rho  # Fluid density
         self.mu = mu    # viscosity 
@@ -38,11 +31,13 @@ class FLUID(object):
         self.dt = dt    # Time step        
         
         self.init_a()   # Matrix for use in fluid solver
-
+    
+    def boundary(self, u): return u  # Override to impose boundary conditions on the fluid
+    
     def step_u(self, ff):
         self.u, uu = self.fluid(self.u, ff)
         return uu
-    
+        
     def init_a(self):
         N = self.N
         a = np.zeros([2,2,N,N])
@@ -51,7 +46,7 @@ class FLUID(object):
 
         for m1 in range(N):
             for m2 in range(N):
-                if not ((m1==0 or (N%2==0 and m1==int(N/2))) and (m2==0 or m2==(N%2==0 and int(N/2)))):
+                if not ((m1==0 or (N%2==0 and m1==int(N/2))) and (m2==0 or (N%2==0 and m2==int(N/2)))):
                     t=(2*np.pi/N)*np.array([m1, m2]);
                     s=np.sin(t);
 
@@ -83,13 +78,13 @@ class FLUID(object):
         w[1]=self.sk(u,u[1]);
         return w
     
-#     def sk(self, u, g):
-#         ip, im, h = self.ip, self.im, self.h
-#         ii = np.arange(self.N)
-#         return ((u[0][ip,ii]+u[0][ii,ii])*g[ip,ii]
-#                 -(u[0][im,ii]+u[0][ii,ii])*g[im,ii]
-#                 +(u[1][ii,ip]+u[1][ii,ii])*g[ii,ip]
-#                 -(u[1][ii,im]+u[1][ii,ii])*g[ii,im])/(4*h);
+# #    def sk(self, u, g):
+# #         ip, im, h = self.ip, self.im, self.h
+# #         ii = np.arange(self.N)
+# #         return ((u[0][ip,ii]+u[0][ii,ii])*g[ip,ii]
+# #                 -(u[0][im,ii]+u[0][ii,ii])*g[im,ii]
+# #                 +(u[1][ii,ip]+u[1][ii,ii])*g[ii,ip]
+# #                 -(u[1][ii,im]+u[1][ii,ii])*g[ii,im])/(4*h);
 
 
     def sk(self, u, g):
@@ -108,7 +103,8 @@ class FLUID(object):
                 -(u[1][IM]+u[1][II])*g[IM])/(4*h);
     
     # Time step the fluid
-    def fluid(self, u, ff):    
+    def fluid(self, u, ff): 
+        self.boundary(u)
         uu = np.zeros(np.shape(u), dtype=np.complex)
         uuu = np.zeros(np.shape(u), dtype=np.complex)
         
@@ -120,7 +116,7 @@ class FLUID(object):
         uu[1]=a[1,0]*w[0]+a[1,1]*w[1]
         uu=np.fft.ifft(uu,axis=2)
         uu=np.fft.ifft(uu,axis=1).real #Get u at midpoint in time
-        
+        self.boundary(uu)
         
         w=u-dt*self.skew(uu)+(dt/rho)*ff+(dt/2)*(mu/rho)*self.laplacian(u)# Get RHS
         w=np.fft.fft(w, axis=1)
@@ -150,17 +146,18 @@ class FLUID(object):
         vorticity=self.vorticity
         dvorticity=(np.max(vorticity)-np.min(vorticity))/5;
         dvorticity = max(dvorticity, 0.1)  ## Catch error on 0 (or uniform) vorticity
-        plt.imshow(vorticity,  vmin=-2*dvorticity, vmax=2*dvorticity, origin='lower', extent=[0, self.L, 0, self.L])
-        plt.colorbar()
+        return plt.imshow(vorticity,  vmin=-2*dvorticity, vmax=2*dvorticity, origin='lower', extent=[0, self.L, 0, self.L])
+#         plt.colorbar()
         
-    def show_streamlines(self, cmap=None):
+    def show_streamlines(self, ax, cmap=None,):
         X, Y = np.meshgrid(self.h*np.arange(self.N), self.h*np.arange(self.N))
         if cmap is None:
-            plt.streamplot(X, Y, self.u[0], self.u[1], color='black')
+            stream = ax.streamplot(X, Y, self.u[0], self.u[1], color='black')
+            return stream.lines, stream.arrows
         else:
             uu = np.sqrt(np.sum(self.u**2, axis=0))
-            plt.streamplot(X, Y, self.u[0], self.u[1], color=uu, cmap=cmap)
-            plt.colorbar()
+            return plt.streamplot(X, Y, self.u[0], self.u[1], color=uu.transpose(), cmap=cmap)
+#             plt.colorbar()
             
 
         
