@@ -13,8 +13,7 @@ class IB2(object):
     
         self.Nb = np.shape(X)[1]             # number of boundary points        
         self.dtheta = 2*np.pi/self.Nb        # spacing of boundary points
-        self.kp = np.arange(self.Nb)+1       # IB index shifted left
-        self.kp[-1] = 0
+        self.kp = (np.arange(self.Nb)+1)%self.Nb       # IB index shifted left
         self.km = np.arange(self.Nb)-1       # IB index shifted right
     
     def step_XX(self, u): self.XX=self.X+0.5*self.dt*self.interp(u,self.X) # Euler step to midpoint
@@ -42,7 +41,7 @@ class IB2(object):
         i=np.array(np.floor(s), dtype=int)
         r=s-i
         for k in range(Nb):
-            w = np.outer(self.phi(r[1, k]), self.phi(r[0, k]))
+            w = self.phi(r[0, k])[None, :]*self.phi(r[1, k])[:, None]
             i1 = np.arange(i[0,k]-1, i[0,k]+3)%N
             i2 = np.arange(i[1,k]-1, i[1,k]+3)%N
             ii = np.meshgrid(i1, i2)
@@ -73,7 +72,8 @@ class IB2(object):
         r=s-i
         for k in range(Nb):
 #             w = np.outer(self.phi(r[0, k]), np.flip(self.phi(r[1, k])))
-            w = np.outer(self.phi(r[1, k]), self.phi(r[0, k]))
+#             w = np.outer(self.phi(r[1, k]), self.phi(r[0, k]))
+            w = self.phi(r[0, k])[None, :]*self.phi(r[1, k])[:, None]
           
             i1 = np.arange(i[0,k]-1, i[0,k]+3)%N
             i2 = np.arange(i[1,k]-1, i[1,k]+3)%N
@@ -117,7 +117,8 @@ class IB2(object):
         i=np.array(np.floor(s), dtype=int)
         r=s-i
         for k in range(Nb):
-            w = np.outer(self.phi(r[1, k]), self.phi(r[0, k]))
+            w = self.phi(r[0, k])[None, :]*self.phi(r[1, k])[:, None]
+#             w = np.outer(self.phi(r[1, k]), self.phi(r[0, k]))
             i1 = np.arange(i[0,k]-1, i[0,k]+3)%N
             i2 = np.arange(i[1,k]-1, i[1,k]+3)%N
             ii = np.meshgrid(i2, i1)
