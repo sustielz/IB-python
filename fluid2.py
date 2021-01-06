@@ -1,7 +1,7 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 
-#### Fluid solver for periodic boundary conditions using fft
+#### 2D Fluid solver using fft. This is more up-to-date than fluid.py
 class FLUID(object):
   
   #### Fluid domain properties ####    
@@ -19,8 +19,7 @@ class FLUID(object):
     def __init__(self, N=64, L=1., rho=1., mu=.01, dt=.01):
         self.N = N 
         self.L = L 
-        self.ip = np.arange(N)+1   # Grid index shifted left
-        self.ip[-1] = 0
+        self.ip = (np.arange(N)+1)%N   # Grid index shifted left
         self.im = np.arange(N)-1   # Grid index shifted right
                             
         self.u = np.zeros([2,N,N]) #Fluid velocity
@@ -72,35 +71,22 @@ class FLUID(object):
         w=(u[:,ip,:]+u[:,im,:]+u[:,:,ip]+u[:,:,im]-4*u)/(h**2);
         return w
     
+    
+    
     def skew(self, u):
         w=u*1. #note that this is done only to make w the same size as u
         w[0]=self.sk(u,u[0]);
         w[1]=self.sk(u,u[1]);
         return w
     
-# #    def sk(self, u, g):
-# #         ip, im, h = self.ip, self.im, self.h
-# #         ii = np.arange(self.N)
-# #         return ((u[0][ip,ii]+u[0][ii,ii])*g[ip,ii]
-# #                 -(u[0][im,ii]+u[0][ii,ii])*g[im,ii]
-# #                 +(u[1][ii,ip]+u[1][ii,ii])*g[ii,ip]
-# #                 -(u[1][ii,im]+u[1][ii,ii])*g[ii,im])/(4*h);
-
-
     def sk(self, u, g):
         ip, im, h = self.ip, self.im, self.h
-#         ii = im+1
         ii = np.arange(self.N)
-        PI = np.meshgrid(ip, ii, indexing='ij')
-        MI = np.meshgrid(im, ii, indexing='ij')
-        IM = np.meshgrid(ii, im, indexing='ij')
-        IP = np.meshgrid(ii, ip, indexing='ij')
-        II = np.meshgrid(ii, ii, indexing='ij')
+        return ((u[0][ip,:]+u[0])*g[ip,:]
+                -(u[0][im,:]+u[0])*g[im,:]
+                +(u[1][:,ip]+u[1])*g[:,ip]
+                -(u[1][:,im]+u[1])*g[:,im])/(4*h);
 
-        return ((u[0][PI]+u[0][II])*g[PI]
-                -(u[0][MI]+u[0][II])*g[MI]
-                +(u[1][IP]+u[1][II])*g[IP]
-                -(u[1][IM]+u[1][II])*g[IM])/(4*h);
     
     # Time step the fluid
     def fluid(self, u, ff): 
@@ -142,13 +128,15 @@ class FLUID(object):
                        +u[0][np.meshgrid(ii,im)])/(2*self.h);
         return vorticity
 
-    def show_vorticity(self):
+    #### Display vorticity on a specified axis using ax.imshow(). Returns the artist. 
+    def show_vorticity(self, ax): 
         vorticity=self.vorticity
         dvorticity=(np.max(vorticity)-np.min(vorticity))/5;
         dvorticity = max(dvorticity, 0.1)  ## Catch error on 0 (or uniform) vorticity
-        return plt.imshow(vorticity,  vmin=-2*dvorticity, vmax=2*dvorticity, origin='lower', extent=[0, self.L, 0, self.L])
+        return ax.imshow(vorticity,  vmin=-2*dvorticity, vmax=2*dvorticity, origin='lower', extent=[0, self.L, 0, self.L])
 #         plt.colorbar()
         
+    #### Plot streamlines on a specified axis using ax.streamplot(). Returns the artist. 
     def show_streamlines(self, ax, cmap=None,):
         X, Y = np.meshgrid(self.h*np.arange(self.N), self.h*np.arange(self.N))
         if cmap is None:
