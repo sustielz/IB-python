@@ -11,7 +11,7 @@ class IB2(object):
         self.dt = dt
         self.K = K      # Elastic stiffness
     
-        self.Nb = np.shape(X)[1]             # number of boundary points        
+        self.Nb = np.shape(X)[0]             # number of boundary points       
         self.dtheta = 2*np.pi/self.Nb        # spacing of boundary points
         self.kp = (np.arange(self.Nb)+1)%self.Nb       # IB index shifted left
         self.km = np.arange(self.Nb)-1       # IB index shifted right
@@ -36,21 +36,21 @@ class IB2(object):
         N, Nb, h = self.N, self.Nb, self.h
         W = np.zeros([N, N])
 
-        U=np.zeros([2,Nb])
+        U=np.zeros([Nb,2])
         s=X/float(h)
         i=np.array(np.floor(s), dtype=int)
         r=s-i
         for k in range(Nb):
-            w = self.phi(r[0, k])[None, :]*self.phi(r[1, k])[:, None]
-            i1 = np.arange(i[0,k]-1, i[0,k]+3)%N
-            i2 = np.arange(i[1,k]-1, i[1,k]+3)%N
+            w = self.phi(r[k, 0])[None, :]*self.phi(r[k, 1])[:, None]
+            i1 = np.arange(i[k,0]-1, i[k,0]+3)%N
+            i2 = np.arange(i[k,1]-1, i[k,1]+3)%N
             ii = np.meshgrid(i1, i2)
 #             if k==0:
 #                 print('ii_interp')
 #                 print(ii)
 
-            U[0,k]=np.sum(w*u[0][ii]);
-            U[1,k]=np.sum(w*u[1][ii]);
+            U[k,0]=np.sum(w*u[0][ii]);
+            U[k,1]=np.sum(w*u[1][ii]);
 #             W[ii] += w
 
 #         print('after interp:')
@@ -73,17 +73,17 @@ class IB2(object):
         for k in range(Nb):
 #             w = np.outer(self.phi(r[0, k]), np.flip(self.phi(r[1, k])))
 #             w = np.outer(self.phi(r[1, k]), self.phi(r[0, k]))
-            w = self.phi(r[0, k])[None, :]*self.phi(r[1, k])[:, None]
+            w = self.phi(r[k, 0])[None, :]*self.phi(r[k, 1])[:, None]
           
-            i1 = np.arange(i[0,k]-1, i[0,k]+3)%N
-            i2 = np.arange(i[1,k]-1, i[1,k]+3)%N
+            i1 = np.arange(i[k,0]-1, i[k,0]+3)%N
+            i2 = np.arange(i[k,1]-1, i[k,1]+3)%N
             ii = np.meshgrid(i1, i2)
 #             if k==0:
 #                 print('ii_spread')
 #                 print(ii)
             
-            f[0][ii]+=(c*F[0,k])*w #Spread force to fluid
-            f[1][ii]+=(c*F[1,k])*w
+            f[0][ii]+=(c*F[k,0])*w #Spread force to fluid
+            f[1][ii]+=(c*F[k,1])*w
 #             f[0] = np.transpose(f[0])
 #             f[1] = np.transpose(f[1])
 #             W[ii] += w
@@ -98,13 +98,13 @@ class IB2(object):
     # elastic stretching force
     def Force(self, X):
         kp, km, dtheta, K = self.kp, self.km, self.dtheta, self.K
-        return K*(X[:,kp]+X[:,km]-2*X)/(dtheta**2);
+        return K*(X[kp]+X[km]-2*X)/(dtheta**2);
     
   #### Methods for visualization/plotting
     def show_X(self, X=None, L=None):
         X = X or self.X
         L = L or self.N*self.h
-        plt.scatter(X[0],X[1])
+        plt.scatter(X[:,0],X[:,1])
         plt.xlim([0,L])
         plt.ylim([0,L])    
         
@@ -117,10 +117,10 @@ class IB2(object):
         i=np.array(np.floor(s), dtype=int)
         r=s-i
         for k in range(Nb):
-            w = self.phi(r[0, k])[None, :]*self.phi(r[1, k])[:, None]
+            w = self.phi(r[k, 0])[None, :]*self.phi(r[k, 1])[:, None]
 #             w = np.outer(self.phi(r[1, k]), self.phi(r[0, k]))
-            i1 = np.arange(i[0,k]-1, i[0,k]+3)%N
-            i2 = np.arange(i[1,k]-1, i[1,k]+3)%N
+            i1 = np.arange(i[k,0]-1, i[k,0]+3)%N
+            i2 = np.arange(i[k,1]-1, i[k,1]+3)%N
             ii = np.meshgrid(i2, i1)
       
             W[ii] += w
