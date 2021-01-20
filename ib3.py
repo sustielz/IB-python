@@ -12,10 +12,11 @@ class IB3(object):
         self.dt = dt
         self.K = K      # Elastic stiffness
     
-        self.Nb = np.shape(X)[1]             # number of boundary points        
-        self.dtheta = 2*np.pi/self.Nb        # spacing of boundary points
-        self.kp = (np.arange(self.Nb)+1)%self.Nb       # IB index shifted left
-        self.km = np.arange(self.Nb)-1       # IB index shifted right
+        self.Nb = np.shape(self.X)[0]  # number of boundary points
+        self.dtheta = 2*np.pi/np.sqrt(self.Nb)
+#         self.dtheta = 2*np.pi/self.Nb        # spacing of boundary points
+#         self.kp = (np.arange(self.Nb)+1)%self.Nb       # IB index shifted left
+#         self.km = np.arange(self.Nb)-1       # IB index shifted right
     
     def step_XX(self, u): self.XX=self.X+0.5*self.dt*self.interp(u,self.X) # Euler step to midpoint
        
@@ -37,30 +38,30 @@ class IB3(object):
         N, Nb, h = self.N, self.Nb, self.h
         W = np.zeros([N, N, N])
 
-        U=np.zeros([3,Nb])
+        U=np.zeros([Nb,3])
         s=X/float(h)
         i=np.array(np.floor(s), dtype=int)
         r=s-i
         for k in range(Nb):
 #             w = self.phi(r[2, k]).outer(self.phi(r[1, k]).outer(self.phi(r[0, k])))
 #             w = np.outer(self.phi(r[2, k]), np.outer(self.phi(r[1, k]), self.phi(r[0, k])))
-            w = self.phi(r[0, k])[:, None, None]*self.phi(r[1, k])[None, :, None]*self.phi(r[2, k])[None, None, :]
+            w = self.phi(r[k, 0])[:, None, None]*self.phi(r[k, 1])[None, :, None]*self.phi(r[k, 2])[None, None, :]
 #             w = self.phi(r[2, k])[None, None, :]*self.phi(r[1, k])[None, :, None]*self.phi(r[0, k])[:, None, None]
 #             w = np.einsum('i,j,k',self.phi(r[2, k]), self.phi(r[1, k]), self.phi(r[0, k]))
 #             if k==0:
 #                 print('w 0:')
 #                 print(w)
-            i1 = np.arange(i[0,k]-1, i[0,k]+3)%N
-            i2 = np.arange(i[1,k]-1, i[1,k]+3)%N
-            i3 = np.arange(i[2,k]-1, i[2,k]+3)%N
+            i1 = np.arange(i[k,0]-1, i[k,0]+3)%N
+            i2 = np.arange(i[k,1]-1, i[k,1]+3)%N
+            i3 = np.arange(i[k,2]-1, i[k,2]+3)%N
             iii = np.meshgrid(i1, i2, i3, indexing='ij')
 #             if k==0:
 #                 print('ii_interp')
 #                 print(ii)
 
-            U[0,k]=np.sum(w*u[0][iii]);
-            U[1,k]=np.sum(w*u[1][iii]);
-            U[2,k]=np.sum(w*u[2][iii]);
+            U[k,0]=np.sum(w*u[0][iii]);
+            U[k,1]=np.sum(w*u[1][iii]);
+            U[k,2]=np.sum(w*u[2][iii]);
 #             W[ii] += w
 
 #         print('after interp:')
@@ -76,20 +77,21 @@ class IB3(object):
         W = np.zeros([N, N, N])
         
         c=self.dtheta/h**3;
+#         c=1./h**3;
         f=np.zeros([3,N,N,N]);
         s=X/float(h)
         i=np.array(np.floor(s), dtype=int)
         r=s-i
         for k in range(Nb):
-            w = self.phi(r[2, k])[None, None, :]*self.phi(r[1, k])[None, :, None]*self.phi(r[0, k])[:, None, None]
-            i1 = np.arange(i[0,k]-1, i[0,k]+3)%N
-            i2 = np.arange(i[1,k]-1, i[1,k]+3)%N
-            i3 = np.arange(i[2,k]-1, i[2,k]+3)%N
+            w = self.phi(r[k, 2])[None, None, :]*self.phi(r[k, 1])[None, :, None]*self.phi(r[k, 0])[:, None, None]
+            i1 = np.arange(i[k,0]-1, i[k,0]+3)%N
+            i2 = np.arange(i[k,1]-1, i[k,1]+3)%N
+            i3 = np.arange(i[k,2]-1, i[k,2]+3)%N
             iii = np.meshgrid(i1, i2, i3, indexing='ij')
 
-            f[0][iii]+=(c*F[0,k])*w #Spread force to fluid
-            f[1][iii]+=(c*F[1,k])*w
-            f[2][iii]+=(c*F[2,k])*w
+            f[0][iii]+=(c*F[k,0])*w #Spread force to fluid
+            f[1][iii]+=(c*F[k,1])*w
+            f[2][iii]+=(c*F[k,2])*w
                        
         return f 
 
@@ -110,16 +112,15 @@ class IB3(object):
         i=np.array(np.floor(s), dtype=int)
         r=s-i
         for k in range(Nb):
-            w = self.phi(r[0, k])[:, None, None]*self.phi(r[1, k])[None, :, None]*self.phi(r[2, k])[None, None, :]
+            w = self.phi(r[k, 0])[:, None, None]*self.phi(r[k, 1])[None, :, None]*self.phi(r[k, 2])[None, None, :]
 
-            i1 = np.arange(i[0,k]-1, i[0,k]+3)%N
-            i2 = np.arange(i[1,k]-1, i[1,k]+3)%N
-            i3 = np.arange(i[2,k]-1, i[2,k]+3)%N
+            i1 = np.arange(i[k,0]-1, i[k,0]+3)%N
+            i2 = np.arange(i[k,1]-1, i[k,1]+3)%N
+            i3 = np.arange(i[k,2]-1, i[k,2]+3)%N
             iii = np.meshgrid(i1, i2, i3, indexing='ij')
 
             W[iii] += w
         return W
-            
             
         
             
@@ -131,19 +132,18 @@ class IB3(object):
         dct=dct/np.linalg.norm(dct, axis=0)
         return dct*base/2
         
-    
-    def Forcesurf(self, X, v): #thi force calculation uses the surface energy(the area) as its energy function.
+    def Forcesurf(self, X, v): #this force calculation uses the surface energy(the area) as its energy function.
         Nb = self.Nb
         K = self.K
-        F= np.zeros([3, Nb])
+        F= np.zeros([Nb,3])
         
         numtri=np.shape(v)[0]
         for ti in range(numtri):
-            A=X[:,v[ti,0]]
-            B=X[:,v[ti,1]]
-            C=X[:,v[ti,2]]
-            F[:,v[ti,0]]+=self.grad(A,B,C);
-            F[:,v[ti,1]]+=self.grad(B,A,C);
-            F[:,v[ti,2]]+=self.grad(C,A,B);
+            A=X[v[ti,0]]
+            B=X[v[ti,1]]
+            C=X[v[ti,2]]
+            F[v[ti,0]]+=self.grad(A,B,C);
+            F[v[ti,1]]+=self.grad(B,A,C);
+            F[v[ti,2]]+=self.grad(C,A,B);
        
         return -F*K;
