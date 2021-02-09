@@ -24,20 +24,23 @@ class PIB2(IB2):
     def step_XX(self, u): 
         super(PIB2, self).step_XX(u)
         self.YY = self.Y + 0.5*self.dt*self.V
-        self.VV = self.V + (0.5*self.dt/self.M)*(self.bForce(self.YY) - self.FF)
+        self.VV = self.V + (0.5*self.dt/self.M)*(self._bForce(self.YY) - self.FF)
         return self.FF
         
     def step_X(self, uu):  # full step using midpoint velocity            
         super(PIB2, self).step_X(uu)
         self.Y += self.dt*self.VV
-        self.V += (self.dt/self.M)*(self.bForce(self.YY) - self.FF)
+        self.V += (self.dt/self.M)*(self._bForce(self.YY) - self.FF)
         return self.FF
 #       
+    def _bForce(self, Y):
+        return self.bForce(self, Y)
+   
     
-    def bForce(self, Y):
+    def bForce(pib2, Y):
 #         pass
         out = Y*0.
-        out[1] -= self.M*980
+        out[1] -= pib2.M*980
         return out
         
 #         return -980*np.array([0., 1.])
