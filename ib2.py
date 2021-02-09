@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #### Generic class for an immersed boundary in a 2D fluid
+    
 class IB2(object):
 
     def __init__(self, X, N, h, dt, K=1.):
@@ -21,7 +22,7 @@ class IB2(object):
     def step_X(self, uu): self.X+=self.dt*self.interp(uu,self.XX) # full step using midpoint velocity            
     
     @property
-    def ff(self): return self.vec_spread(self.Force(self.XX) ,self.XX) # Force at midpoint
+    def ff(self): return self.vec_spread(self.Force(self.XX), self.XX) # Force at midpoint
     
     def phi(self, r):     ## Discrete dirac delta function
         w = np.zeros(4)
@@ -45,20 +46,9 @@ class IB2(object):
             i1 = np.arange(i[k,0]-1, i[k,0]+3)%N
             i2 = np.arange(i[k,1]-1, i[k,1]+3)%N
             ii = np.meshgrid(i1, i2)
-#             if k==0:
-#                 print('ii_interp')
-#                 print(ii)
 
             U[k,0]=np.sum(w*u[0][ii]);
             U[k,1]=np.sum(w*u[1][ii]);
-#             W[ii] += w
-
-#         print('after interp:')
-#         plt.imshow(np.transpose(W))
-#         plt.colorbar()
-#         plt.scatter(X[0]/h, X[1]/h)
-#         plt.show()
-#         print(np.mean(abs(U)))
         return U
     
     def vec_spread(self, F, X):   ## Spread boundary force F onto fluid domain ff
@@ -71,35 +61,23 @@ class IB2(object):
         i=np.array(np.floor(s), dtype=int)
         r=s-i
         for k in range(Nb):
-#             w = np.outer(self.phi(r[0, k]), np.flip(self.phi(r[1, k])))
-#             w = np.outer(self.phi(r[1, k]), self.phi(r[0, k]))
             w = self.phi(r[k, 0])[None, :]*self.phi(r[k, 1])[:, None]
           
             i1 = np.arange(i[k,0]-1, i[k,0]+3)%N
             i2 = np.arange(i[k,1]-1, i[k,1]+3)%N
             ii = np.meshgrid(i1, i2)
-#             if k==0:
-#                 print('ii_spread')
-#                 print(ii)
-            
+
             f[0][ii]+=(c*F[k,0])*w #Spread force to fluid
             f[1][ii]+=(c*F[k,1])*w
-#             f[0] = np.transpose(f[0])
-#             f[1] = np.transpose(f[1])
-#             W[ii] += w
-                       
-#         print('after spread:')
-#         plt.imshow(np.transpose(W))
-#         plt.colorbar()
-#         plt.scatter(X[0]/h, X[1]/h)
-#         plt.show()
+#         print(max(f))
         return f 
 
     # elastic stretching force
     def Force(self, X):
         kp, km, dtheta, K = self.kp, self.km, self.dtheta, self.K
-        return K*(X[kp]+X[km]-2*X)/(dtheta**2);
+        return K*(X[kp]+X[km]-2*X)/(dtheta**2)
     
+
   #### Methods for visualization/plotting
     def show_X(self, X=None, L=None):
         X = X or self.X
@@ -127,4 +105,5 @@ class IB2(object):
 
         plt.imshow(W, origin='lower')
         plt.colorbar()
-        if show_X: self.show_X()
+        if show_X: 
+            self.show_X()
