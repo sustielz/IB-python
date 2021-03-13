@@ -70,7 +70,7 @@ class FLUID(object):
         im, ip, h = self.ip, self.im, self.h
         w=(u[:,ip,:]+u[:,im,:]+u[:,:,ip]+u[:,:,im]-4*u)/(h**2);
         return w
-    
+   
     
     
     def skew(self, u):
@@ -89,7 +89,8 @@ class FLUID(object):
 
     
     # Time step the fluid
-    def fluid(self, u, ff): 
+    def fluid(self, u, ff):
+        self.t += self.dt
         self.boundary(u)
         uu = np.zeros(np.shape(u), dtype=np.complex)
         uuu = np.zeros(np.shape(u), dtype=np.complex)
@@ -140,13 +141,12 @@ class FLUID(object):
     def show_streamlines(self, ax, cmap=None,):
         X, Y = np.meshgrid(self.h*np.arange(self.N), self.h*np.arange(self.N))
         if cmap is None:
-            stream = ax.streamplot(X, Y, self.u[0], self.u[1], color='black')
-            return stream.lines, stream.arrows
+            return ax.streamplot(X, Y, self.u[0], self.u[1], color='black')
         else:
             uu = np.sqrt(np.sum(self.u**2, axis=0))
-            return plt.streamplot(X, Y, self.u[0], self.u[1], color=uu.transpose(), cmap=cmap)
-#             plt.colorbar()
+            return ax.streamplot(X, Y, self.u[0], self.u[1], color=uu.transpose(), cmap=cmap)
             
+
 
         
         

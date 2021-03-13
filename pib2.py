@@ -16,6 +16,7 @@ class PIB2(IB2):
     def __init__(self, Nb, N, h, dt, K=1., Kp=None):
         super(PIB2, self).__init__(Nb, N, h, dt, K=K)
         self.Kp = Kp or K
+#         self.dtheta = 1.
         self.Y = self.X.copy()    #### massive points Y initially coincide with fluid markers X
         self.V = self.Y*0.
         self.M = 0.01     
