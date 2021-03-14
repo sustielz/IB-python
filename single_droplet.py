@@ -24,7 +24,7 @@ ARGV = sys.argv
 
 special_params = dict(zip(ARGV[1::2], ARGV[2::2]))
 for key in special_params.keys(): special_params[key] = eval(special_params[key])
-locals().update(params)
+locals().update(special_params)
 params.update(special_params)
 with open('params.json', 'w') as f:
     json.dump(params, f)
@@ -48,7 +48,7 @@ def pibDROPLET(fluid, RAD, POS, Nb=400, h=None, K=40, Kp=2500, M=None):
 ####################################
 fluid = FLUID(N=N, L=L, mu=mu)
 fluid.dt = dt
-droplets = [pibDROPLET(fluid, rad, pos, h=fluid.h/2, K=K, Kp=Kp, Nb=Nb) for pos in positions]
+droplets = [pibDROPLET(fluid, rad, pos, h=sdrop_h*fluid.h, K=K, Kp=Kp, Nb=Nb) for pos in positions]
 
 insides = [drop[0] for drop in droplets]
 outsides = [drop[1] for drop in droplets]
@@ -59,7 +59,7 @@ for inside in insides:
 #     inside.bForce = lambda solid, Y: GRAV(solid, Y) - 1*solid.V + 100*TRAPPING_PLANE(Y, fluid.L)
     
 #     inside.bForce = lambda solid, Y:  50*TRAPPING_PLANE(Y, fluid.L)*(1+np.sin(2*np.pi*fluid.t/(solid.dt*100)))
-    inside.bForce = lambda solid, Y:  GRAV(solid, Y, theta=theta) + Tamp*TRAPPING_PLANE(Y, fluid.L)*(1+np.sin(2*np.pi*fluid.t/(solid.dt*Tper)))
+    inside.bForce = lambda solid, Y:  GRAV(solid, Y, theta=stheta*np.pi) + Tamp*TRAPPING_PLANE(Y, fluid.L)*(1+np.sin(2*np.pi*fluid.t/(solid.dt*Tper)))
     
 
 
@@ -72,7 +72,7 @@ U = []
 Xout = [[] for outside in outsides]
 Xin = [[] for inside in insides]
 Y = [[] for inside in insides]
-for i in range(Nsteps+1):
+for i in range(nsteps+1):
     iterate(fluid, solids)
     #### Keeping track of 'interior' properties
     for j, iin in enumerate(insides):
