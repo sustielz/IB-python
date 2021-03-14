@@ -24,24 +24,20 @@ ARGV = sys.argv
 
 special_params = dict(zip(ARGV[1::2], ARGV[2::2]))
 for key in special_params.keys(): special_params[key] = eval(special_params[key])
+locals().update(params)
 params.update(special_params)
-print(special_params)
-
-#with open(PATH+'/params.json', 'w') as f:
 with open('params.json', 'w') as f:
     json.dump(params, f)
-locals().update(params)
 ############################
 
-
 #### Define a pIBM droplet using geometry from util
-def pibDROPLET(fluid, RAD, POS, Nb=400, h=None, K=40, Kp=2500):
+def pibDROPLET(fluid, RAD, POS, Nb=400, h=None, K=40, Kp=2500, M=None):
     h = h or fluid.h
     X_in = FULL_CIRCLE(h, RAD-h/2., POS)
     X_out = CIRCLE(Nb, RAD, POS)
     drop_in= PIB2(X_in, fluid.N, fluid.h, fluid.dt)
     drop_in.Kp = Kp    
-#     drop_in.M = M
+    drop_in.M = M or drop_in.M
     drop_out = IB2(X_out, fluid.N, fluid.h, fluid.dt)
     drop_out.K = K
     return [drop_in, drop_out]
@@ -94,18 +90,5 @@ for i in range(Nsteps+1):
 #with open(PATH+'/data.npz', 'wb') as f:
 with open('data.npz', 'wb') as f:
     np.savez(f, U=np.array(U), Xin=np.array(Xin), Xout=np.array(Xout), Y=np.array(Y), delta=np.array(delta), V=np.array(V))                
+    
 
-# with open(PATH+'/U.npy', 'wb') as f:
-#     np.save(f, np.array(U))
-
-# with open(PATH+'/Xin.npy', 'wb') as f:
-#     np.save(f, np.array(Xin))
-    
-# with open(PATH+'/Xout.npy', 'wb') as f:
-#     np.save(f, np.array(Xout))
-    
-# with open(PATH+'/Y.npy', 'wb') as f:
-#     np.save(f, np.array(Y))
-    
-# with open(PATH+'/delta.npy', 'wb') as f:
-#     np.save(f, np.array(delta))
