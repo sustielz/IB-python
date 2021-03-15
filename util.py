@@ -36,6 +36,22 @@ def FULL_CIRCLE(h, RAD, POS, phi=0*np.pi/3):
 #     return (np.vstack([X*np.cos(phi) - Y*np.sin(phi), X*np.sin(phi) + Y*np.cos(phi)]) + np.array(POS)[:, None]).transpose()
 
 
+def sunflower(n, alpha):   
+    b = round(alpha*np.sqrt(n))      # number of boundary points
+    phi = (np.sqrt(5)+1)/2           # golden ratio
+    
+    k = np.arange(n)
+    r = np.sqrt( (2*k+1)/(2*n-b+1) )
+    r[k>n-b] = 1
+    theta = 2*np.pi*k/phi**2
+    
+    X = np.ones([n, 2])
+    X[:,0] = r*np.cos(theta)
+    X[:,1] = r*np.sin(theta)
+    return X
+
+def SUNFLOWER(RAD, POS, n, alpha): return sunflower(n, alpha)*RAD + np.array(POS)[np.newaxis, :] 
+
 
 #### Force Functions
 def TRAPPING_PLANE(Y, L):
