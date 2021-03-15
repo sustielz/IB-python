@@ -108,3 +108,14 @@ for art in ax.get_children():
     
 ani2 = animation.ArtistAnimation(fig, ims, interval=150, repeat_delay=1)
 ani2.save('single_droplet.gif', writer='pillow')
+
+
+
+fig_delta = plt.figure()
+ax_delta = fig_delta.add_subplot()
+ax_delta.plot(np.array(delta[0])/fluid.h)
+ax_delta.set_ylim([0, 3])
+ax_delta.set_ylabel('|Y-X|/h')
+ax_delta.set_xlabel('timestep')
+ax_delta.set_title('Stability')
+fig_delta.savefig('stability.png')
