@@ -50,6 +50,17 @@ locals().update(params)
 
 
 
+
+fig_delta = plt.figure()
+ax_delta = fig_delta.add_subplot(111)
+ax_delta.plot(np.array(delta[0])*N/L)
+ax_delta.set_ylim([0, 3])
+ax_delta.set_ylabel('|Y-X|/h')
+ax_delta.set_xlabel('timestep')
+ax_delta.set_title('Stability')
+fig_delta.savefig('stability.png')
+
+
 #### Animation
 fig = plt.figure(constrained_layout=True)
 nfigs = len(Xin)
@@ -66,16 +77,19 @@ for j, axj in enumerate(axes_frame):
 #     axj.set_xlim([-1, 1])
 #     axj.set_ylim([-1, 1])
 cmap = plt.get_cmap('tab10')
+RED = plt.get_cmap('Reds')
 ims = []
 
 for i, u in enumerate(U):
-    print(i*10)
+    print(i*nmod)
     im = [show_vorticity(u, L, ax)]
     out = show_streamlines(u, L, ax)
     im.append(out.lines)
     for k, X in enumerate([Xin, Xout]):
         for j, x in enumerate(X): 
             im.append(ax.scatter(x[i][:,0]%L, x[i][:,1]%L, color=cmap(2*j+k)))
+            im.append(ax.text(0.5, 1.01, 'Time {}'.format(i*nmod*dt), horizontalalignment='center', verticalalignment='bottom', transform=ax.transAxes))
+
     for j, axj in enumerate(axes_frame):
         #### Plot Droplets in COM Frame
         xin = Xin[j][i]
@@ -84,10 +98,16 @@ for i, u in enumerate(U):
         ins = xin - com
         out = xout - com
 
-        im.append(axj.scatter(ins[:,0], ins[:,1], s=1000/Nb, color=cmap(0)))
+        im.append(axj.scatter(ins[:,0], ins[:,1], s=1000/Ni, color=cmap(0)))
         im.append(axj.scatter(out[:,0], out[:,1], color=cmap(1)))
         im.append(axj.scatter([out[0,0]], [out[0,1]], color='red'))  ## Mark theta=0
-#         im.append(ax.set_title('t={}'.format(1*fluid.t)))
+
+        #### DEBUG ####
+#         yins = Y[j][i] - com
+#         im.append(axj.scatter(yins[:,0], yins[:,1], s=1000/Ni, color=cmap(1)))
+#         TETHERS = np.array([[ins[i], yins[i]] for i in range(len(ins))])
+#         for tether in TETHERS:
+#             im.extend(axj.plot(tether[:,0], tether[:,1], color=RED(np.linalg.norm(tether[1]-tether[0])*N/L)))
 
         ## Record theta profile of each boundary
 #             THETA[j].append(np.arctan2(out[:,1], out[:,0]))
@@ -110,12 +130,3 @@ ani2 = animation.ArtistAnimation(fig, ims, interval=150, repeat_delay=1)
 ani2.save('single_droplet.gif', writer='pillow')
 
 
-
-fig_delta = plt.figure()
-ax_delta = fig_delta.add_subplot()
-ax_delta.plot(np.array(delta[0])*N/L)
-ax_delta.set_ylim([0, 3])
-ax_delta.set_ylabel('|Y-X|/h')
-ax_delta.set_xlabel('timestep')
-ax_delta.set_title('Stability')
-fig_delta.savefig('stability.png')

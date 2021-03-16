@@ -31,10 +31,10 @@ with open('params.json', 'w') as f:
 ############################
 
 #### Define a pIBM droplet using geometry from util
-def pibDROPLET(fluid, RAD, POS, Nb=400, h=None, K=40, Kp=2500, M=None):
-    h = h or fluid.h
-    X_in = FULL_CIRCLE(h, RAD-h/2., POS)
-    X_out = CIRCLE(Nb, RAD, POS)
+def pibDROPLET(fluid, RAD, POS, Nb=400, K=40, Ni=200, Kp=2500, M=None):
+#     X_in = FULL_CIRCLE(RAD-fluid.h/2, POS, Ni)
+    X_in = SUNFLOWER(RAD-fluid.h/2, POS, Ni)
+    X_out = CIRCLE(RAD, POS, Nb)
     drop_in= PIB2(X_in, fluid.N, fluid.h, fluid.dt)
     drop_in.Kp = Kp    
     drop_in.M = M or drop_in.M
@@ -42,19 +42,23 @@ def pibDROPLET(fluid, RAD, POS, Nb=400, h=None, K=40, Kp=2500, M=None):
     drop_out.K = K
     return [drop_in, drop_out]
 
-
 ####################################
   ########   Simulation   ########
 ####################################
+
+#### Initialize Fluid+Droplets
 fluid = FLUID(N=N, L=L, mu=mu)
 fluid.dt = dt
-droplets = [pibDROPLET(fluid, rad, pos, h=sdrop_h*fluid.h, K=K, Kp=Kp, Nb=Nb) for pos in positions]
+droplets = [pibDROPLET(fluid, rad, positions[i], Nb=Nb, K=K, Ni=Ni, Kp=Kp, M=M) for i in range(len(positions))]
+# rad = [0.05, 0.1]
+# droplets = [pibDROPLET(fluid, rad[i], positions[i], h=fluid.h/2, K=K, Kp=Kp, Nb=Nb, M=M) for i in range(len(positions))]
 
 insides = [drop[0] for drop in droplets]
 outsides = [drop[1] for drop in droplets]
 
 solids = []
 trash = [solids.extend(drop) for drop in droplets]
+
 for inside in insides:
 #     inside.bForce = lambda solid, Y: GRAV(solid, Y) - 1*solid.V + 100*TRAPPING_PLANE(Y, fluid.L)
     
@@ -78,7 +82,7 @@ for i in range(nsteps+1):
     for j, iin in enumerate(insides):
         delta[j].append(np.max(np.linalg.norm(iin.Y - iin.X, axis=1)))
         V[j].append(np.mean(iin.V, axis=0))
-    if i%10==0:
+    if i%nmod==0:
         print(i)
         U.append(fluid.u.copy())
         for j, iin in enumerate(insides):

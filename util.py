@@ -13,44 +13,30 @@ def iterate(fluid, solids):
     uu=fluid.step_u(ff)        # Step Fluid Velocity
     for solid in solids:
         solid.step_X(uu)       # full step using midpoint velocity    
-        
-        
-        
 
+        
+        
 #### Geometry
-def CIRCLE(Nb, RAD, POS):  
+def CIRCLE(RAD=1., POS=(0.,0.), Nb=400):  
     theta = np.linspace(0, 2*np.pi, Nb+1)[:-1]
-    return np.array(POS)[None, :] + RAD*np.vstack([np.cos(theta), np.sin(theta)]).transpose()
+    return RAD*np.stack([np.cos(theta), np.sin(theta)], axis=1) + POS
 
-def FULL_CIRCLE(h, RAD, POS, phi=0*np.pi/3):
-    pts = []
-    for y in np.arange(-RAD+h, RAD, h):
-        for x in np.arange(0, (RAD**2-y**2)**0.5, h):
-            pts.append([x, y])
-            if x != 0:
-                pts.append([-x, y])
-    X, Y = np.array(pts)[:,0], np.array(pts)[:,1]
-    X, Y = [X*np.cos(phi) - Y*np.sin(phi), X*np.sin(phi) + Y*np.cos(phi)]
-    return (np.vstack([X, Y]) + np.array(POS)[:, None]).transpose()
+def FULL_CIRCLE(RAD=1., POS=(0.,0.), n=200, phi=0*np.pi/3):
+    nbox = 2*int(np.sqrt(n/np.pi))
+    X = np.meshgrid(np.linspace(-1., 1., nbox), np.linspace(-1., 1., nbox))
+    INSIDE = (X[0]**2+X[1]**2)<=1.
+    return RAD*np.stack([X[0][INSIDE], X[1][INSIDE]], axis=1)+POS
 
-#     return (np.vstack([X*np.cos(phi) - Y*np.sin(phi), X*np.sin(phi) + Y*np.cos(phi)]) + np.array(POS)[:, None]).transpose()
-
-
-def sunflower(n, alpha):   
+def SUNFLOWER(RAD=1., POS=(0.,0.), n=200, alpha=2): 
     b = round(alpha*np.sqrt(n))      # number of boundary points
     phi = (np.sqrt(5)+1)/2           # golden ratio
-    
     k = np.arange(n)
     r = np.sqrt( (2*k+1)/(2*n-b+1) )
     r[k>n-b] = 1
     theta = 2*np.pi*k/phi**2
-    
-    X = np.ones([n, 2])
-    X[:,0] = r*np.cos(theta)
-    X[:,1] = r*np.sin(theta)
-    return X
+    return RAD*np.stack([r*np.cos(theta), r*np.sin(theta)], axis=1) + POS#np.array(POS)[np.newaxis, :] 
 
-def SUNFLOWER(RAD, POS, n, alpha): return sunflower(n, alpha)*RAD + np.array(POS)[np.newaxis, :] 
+
 
 
 #### Force Functions
