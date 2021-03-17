@@ -25,14 +25,14 @@ class RPIB2(IB2):
         C = self.C = self.Y - self.YCM[np.newaxis,:]
         self.E = np.eye(2)        
         self.EE = np.eye(2)
-#         self.I0 = sum(np.linalg.norm(C, axis=0)**2)*np.eye(2) - np.inner(C, C)
-#         self.I0i = np.linalg.inv(self.I0)
-#         self.L = np.zeros(2)
-        self.I0 = sum(np.linalg.norm(C, axis=1)**2)     #### Simplified since we only care about Lz
-        self.I0i = 1./self.I0
-        self.L = 0.
         self.M = 0.01     
 
+#         self.I0 = sum(np.linalg.norm(C, axis=0)**2)*np.eye(2) - np.inner(C, C)
+#         self.I0i = np.linalg.inv(self.I0)
+        self.I0 = self.M*sum(np.linalg.norm(C, axis=1)**2)     #### Simplified since we only care about Lz
+        self.I0i = 1./self.I0
+#         self.L = np.zeros(2)
+        self.L = 0.
         
     def step_XX(self, u): 
         super(RPIB2, self).step_XX(u)
@@ -134,7 +134,7 @@ class RPIB2(IB2):
     
         C = Y-YCM[np.newaxis, :]
 #         return (self.dtheta/self.h**2)*np.sum(C[0]*F[1]-C[1]*F[0])
-        return np.sum(C[:, 0]*F[:, 1]-C[:, 1]*F[:, 0])
+        return np.mean(C[:, 0]*F[:, 1]-C[:, 1]*F[:, 0])
     @property
     def FF(self): return self.pForce(self.YY, self.XX) #+ self.Force(self.XX)
     
