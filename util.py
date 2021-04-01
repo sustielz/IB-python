@@ -77,7 +77,7 @@ def vorticity(u, L=1.):
 def show_vorticity(u, L, ax): 
     vort=vorticity(u, L)
     dvorticity=(np.max(vort)-np.min(vort))/5;
-    dvorticity = max(dvorticity, 0.1)  ## Catch error on 0 (or uniform) vorticity
+    dvorticity = max(dvorticity, 1e-6)  ## Catch error on 0 (or uniform) vorticity
     return ax.imshow(vort,  vmin=-2*dvorticity, vmax=2*dvorticity, origin='lower', extent=[0, L, 0, L])
 #         plt.colorbar()
 
