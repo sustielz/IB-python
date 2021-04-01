@@ -13,10 +13,10 @@ from ib2 import IB2
 
 
 class RPIB2(IB2):
-    def __init__(self, Nb, N, h, dt, K=1., Kp=None):
-        super(RPIB2, self).__init__(Nb, N, h, dt, K=K)
+    def __init__(self, X, N, h, dt, K=1., Kp=None):
+        super(RPIB2, self).__init__(X, N, h, dt, K=K)
         self.Kp = Kp or K
-        #         self.dtheta = 1.
+#         self.dtheta = 1.          
         self.Y = self.X.copy()    #### massive points Y initially coincide with fluid markers X
         self.V = self.Y*0.   
         self.YCM = np.mean(self.Y, axis=0)       
@@ -26,6 +26,8 @@ class RPIB2(IB2):
         self.E = np.eye(2)        
         self.EE = np.eye(2)
         self.M = 0.01     
+        
+        self.dtheta = 1./self.Nb
 
 #         self.I0 = sum(np.linalg.norm(C, axis=0)**2)*np.eye(2) - np.inner(C, C)
 #         self.I0i = np.linalg.inv(self.I0)
@@ -52,7 +54,8 @@ class RPIB2(IB2):
 #             self.EE[i] = self.rot(ax, theta, self.E[i])
 # #         self.EE = self.E#self.rot(ax, theta, self.E)
     
-        theta = 0.5*self.dt*self.L/self.I0      #### Simplified sinze L=Lz is not a vector
+        #### TODO: Is this - sign correct?
+        theta = -0.5*self.dt*self.L/self.I0      #### Simplified sinze L=Lz is not a vector
         for i in range(2):
             self.EE[i] = self.rot(theta, self.E[i])
 #         self.EE = self.E#self.rot(ax, theta, self.E)
@@ -79,8 +82,8 @@ class RPIB2(IB2):
 #             self.E[i] = self.rot(ax, theta, self.E[i])
 # #         self.E = self.rot(ax, theta, self.E)
         
-    
-        theta = self.dt*self.L/self.I0      #### Simplified sinze L=Lz is not a vector    
+        #### TODO: Is this - sign correct?
+        theta = -self.dt*self.L/self.I0      #### Simplified sinze L=Lz is not a vector    
         for i in range(2):
             self.E[i] = self.rot(theta, self.E[i])
 #         self.E = self.rot(ax, theta, self.E)
@@ -113,12 +116,6 @@ class RPIB2(IB2):
 #         return -980*np.array([0., 1.])
 #         return -9.8*np.array([0., 1.])
 
-
-
-
-
-
-    def PENALTY(self): return np.linalg.norm(self.Y - self.X, axis=0)    
         
     def pForce(self, Y, X): return self.Kp*(Y-X)
     

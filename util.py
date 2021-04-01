@@ -77,7 +77,7 @@ def vorticity(u, L=1.):
 def show_vorticity(u, L, ax): 
     vort=vorticity(u, L)
     dvorticity=(np.max(vort)-np.min(vort))/5;
-    dvorticity = max(dvorticity, 0.1)  ## Catch error on 0 (or uniform) vorticity
+    dvorticity = max(dvorticity, 1e-6)  ## Catch error on 0 (or uniform) vorticity
     return ax.imshow(vort,  vmin=-2*dvorticity, vmax=2*dvorticity, origin='lower', extent=[0, L, 0, L])
 #         plt.colorbar()
 
@@ -96,5 +96,74 @@ def show_streamlines(u, L, ax, cmap=None,):
 
 
 
-        
+############## Trisph functionality  ###############
+import matplotlib.tri as tri
+
+def dodec():    #constructs the vertices of a dodecahedron on the unit sphere
+    theta=2*np.pi/5
+    z=np.cos(theta)/(1-np.cos(theta))
+    r=np.sqrt(1-z**2)
+    
+    x = np.zeros([12, 3])
+    x[0]=[0,0, 1];
+    x[11]=[0,0,-1];
+    for j in np.arange(5)+1:
+        k = j-.5
+        x[j]=[r*np.cos(j*theta),r*np.sin(j*theta), z]
+        x[5+j]=[r*np.cos(k*theta),r*np.sin(k*theta),-z]
+    
+    v = np.vstack([[1,2,3], [1,3,4], [1,4,5], [1,5,6], [1,6,2],
+                      [2,8,3], [3,9,4], [4,10,5], [5,11,6], [6,7,2],
+                      [8,2,7], [9,3,8], [10,4,9], [11,5,10], [7,6,11],
+                      [7,12,8], [8,12,9], [9,12,10], [10,12,11], [11,12,7]]) - 1
+    
+    return x, np.array(v, dtype=int)
+    
+def refine(x, v):  # script to refine triangulation of the sphere
+    nv = np.shape(x)[0]
+    nt = np.shape(v)[0]*1
+    v = np.append(v, np.zeros([3*nt, 3], dtype=int), axis=0) ## we will have 4x as many triangles after refinement        
+    x = np.append(x, np.zeros([3*nv, 3]), axis=0) ## we will have 4x as many triangles after refinement    
+
+    next3=[1,2,0]
+    vnew = np.zeros(3)
+    a=np.zeros([nv+1,nv+1])
+    for t in range(nt):
+        for j in range(3):
+            v1=v[t, next3[j]]
+            v2=v[t,next3[next3[j]]]
+            if a[v1,v2]==0:
+                vnew[j]=nv
+                x[nv]= locate(v1, v2, x)
+                a[v1,v2]=nv
+                a[v2,v1]=nv
+                nv += 1
+
+            else:
+                vnew[j]=a[v1,v2];
+
+
+        v[1*nt+t]=[v[t,0],vnew[2],vnew[1]]
+        v[2*nt+t]=[v[t,1],vnew[0],vnew[2]]
+        v[3*nt+t]=[v[t,2],vnew[1],vnew[0]]
+        v[t]=vnew
+
+    return x[:nv], v
+    
+def trisph(rad=1., ctr=[0,0,0], numr=0):
+    x, v = dodec()
+    for nr in range(numr):
+        x, v = refine(x, v)
+    
+    x=x*rad+ctr
+    return x, v
+
+    
+def locate(v1,v2,x):
+    #locate the perpendicular bisector of the great circle joining
+    #the points whose indices are stored in rows v1 and v2 of x
+    xout=0.5*(x[v1]+x[v2])
+    r=np.linalg.norm(xout, axis=0)
+    return xout/r
+
         

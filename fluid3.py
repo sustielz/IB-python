@@ -105,6 +105,7 @@ class FLUID(object):
     
     # Time step the fluid
     def fluid(self, u, ff): 
+        self.t += self.dt
         self.boundary(u)
         uu = np.zeros(np.shape(u), dtype=np.complex)
         uuu = np.zeros(np.shape(u), dtype=np.complex)
