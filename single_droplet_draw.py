@@ -50,6 +50,7 @@ locals().update(params)
 
 
 
+delta = [[np.max(np.linalg.norm(Y[j][i] - Xin[j][i], axis=1)) for i in range(len(Y[0]))] for j in range(len(Y))] 
 
 fig_delta = plt.figure()
 ax_delta = fig_delta.add_subplot(111)
@@ -81,19 +82,19 @@ RED = plt.get_cmap('Reds')
 ims = []
 
 for i, u in enumerate(U):
-    print(i*nmod)
+    ii = i*nmod
     im = [show_vorticity(u, L, ax)]
     out = show_streamlines(u, L, ax)
     im.append(out.lines)
     for k, X in enumerate([Xin, Xout]):
         for j, x in enumerate(X): 
-            im.append(ax.scatter(x[i][:,0]%L, x[i][:,1]%L, color=cmap(2*j+k)))
+            im.append(ax.scatter(x[ii][:,0]%L, x[ii][:,1]%L, color=cmap(2*j+k)))
             im.append(ax.text(0.5, 1.01, 'Time {}'.format(i*nmod*dt), horizontalalignment='center', verticalalignment='bottom', transform=ax.transAxes))
 
     for j, axj in enumerate(axes_frame):
         #### Plot Droplets in COM Frame
-        xin = Xin[j][i]
-        xout = Xout[j][i]
+        xin = Xin[j][ii]
+        xout = Xout[j][ii]
         com = np.mean(xin, axis=0)
         ins = xin - com
         out = xout - com
