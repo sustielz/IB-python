@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from matplotlib import gridspec
 import json
-
+import sys
 
 
 #######    Plotting Functions      ##############
@@ -41,11 +41,24 @@ def show_streamlines(u, L, ax, cmap=None,):
 #################################################
 
         
-with open('params.json', 'r') as f:
+if len(sys.argv)==1:
+    PARAMNAME = 'params'
+    DATANAME = 'data'
+    IM1NAME = 'stability'
+    IM2NAME = 'single_droplet'
+else:
+    FILENAME = sys.argv[1]
+    PARAMNAME = 'params/'+FILENAME
+    DATANAME = 'data/'+FILENAME
+    IM1NAME = 'ims/'+FILENAME
+    IM2NAME = 'ims/'+FILENAME
+
+with open(PARAMNAME+'.json', 'r') as f:
     params = json.load(f)
-data = np.load('data.npz')
+data = np.load(DATANAME+'.npz')
 params.update(data)
 locals().update(params)
+
 
 
 
@@ -59,7 +72,7 @@ ax_delta.set_ylim([0, 3])
 ax_delta.set_ylabel('|Y-X|/h')
 ax_delta.set_xlabel('timestep')
 ax_delta.set_title('Stability')
-fig_delta.savefig('stability.png')
+fig_delta.savefig(IM1NAME+'.png')
 
 
 #### Animation
@@ -128,6 +141,6 @@ for art in ax.get_children():
     
     
 ani2 = animation.ArtistAnimation(fig, ims, interval=150, repeat_delay=1)
-ani2.save('single_droplet.gif', writer='pillow')
+ani2.save(IM2NAME+'.gif', writer='pillow')
 
 
