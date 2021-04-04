@@ -3,7 +3,8 @@
 ### General Setup
 import numpy as np 
 import warnings; warnings.simplefilter('ignore')
-import sys 
+import sys
+sys.path.append('src')
 import os
 import json
 
@@ -22,10 +23,11 @@ locals().update(params)
 ARGV = sys.argv
 
 special_params = dict(zip(ARGV[1::2], ARGV[2::2]))
+FILENAME='trial_'+'_'.join(ARGV[1:]).replace('.', 'pt')
 for key in special_params.keys(): special_params[key] = eval(special_params[key])
 locals().update(special_params)
 params.update(special_params)
-with open('params.json', 'w') as f:
+with open('params/{}.json'.format(FILENAME), 'w') as f:
     json.dump(params, f)
 ############################
 
@@ -65,7 +67,7 @@ for inside in insides:
 #     inside.bForce = lambda solid, Y: GRAV(solid, Y) - 1*solid.V + 100*TRAPPING_PLANE(Y, fluid.L)
     
 #     inside.bForce = lambda solid, Y:  50*TRAPPING_PLANE(Y, fluid.L)*(1+np.sin(2*np.pi*fluid.t/(solid.dt*100)))
-    inside.bForce = lambda solid, Y:  GRAV(solid, Y, theta=theta) + Tamp*TRAPPING_PLANE(Y, fluid.L)*(1+np.sin(2*np.pi*fluid.t/(solid.dt*Tper)))
+    inside.bForce = lambda solid, Y:  GRAV(solid, Y, theta=stheta*np.pi) + Tamp*TRAPPING_PLANE(Y, fluid.L)*(1+np.sin(2*np.pi*fluid.t/(solid.dt*Tper)))
     
     
     
@@ -95,7 +97,7 @@ for i in range(nsteps+1):
 #             Xout[j].append(out.X.copy())
 #with open(PATH+'/data.npz', 'wb') as f:
 
-with open('data.npz', 'wb') as f:
+with open('data/{}.npz'.format(FILENAME), 'wb') as f:
     np.savez(f, U=np.array(U), Xin=np.array(Xin), Xout=np.array(Xout), Y=np.array(Y), V=np.array(V))                
     
 
