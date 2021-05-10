@@ -4,33 +4,24 @@ import matplotlib.pyplot as plt
 #### 3D Fluid solver using fft
 class FLUID(object):
   
-  #### Fluid domain properties ####    
-    @property  # Box size
-    def L(self): return self._L
-    
-    @L.setter
-    def L(self, L):
-        self._L = float(L)
-        self._h = self.L/self.N
 
-    @property  # Grid spacing
-    def h(self): return self._h
             
     def __init__(self, N=64, L=1., rho=1., mu=.01, dt=.01):
-        self.N = N 
-        self.L = L 
+        self._N = N 
+        self._L = float(L) 
+        self._h = self._L/self._N
+        self._rho = rho  # Fluid density
+        self._mu = mu    # viscosity 
+        self._dt = dt    # Time step        
+        
+        self.init_a()   # Matrix for use in fluid solver 
+        
+        self.u = np.zeros([3,N,N,N]) #Fluid velocity
         self.ip = (np.arange(N)+1)%N   # Grid index shifted left
         self.im = np.arange(N)-1   # Grid index shifted right
-                            
-        self.u = np.zeros([3,N,N,N]) #Fluid velocity
-        self.rho = rho  # Fluid density
-        self.mu = mu    # viscosity 
-        
         self.t = 0      # Time
-        self.dt = dt    # Time step        
-        
-        self.init_a()   # Matrix for use in fluid solver
-    
+     
+ 
     def boundary(self, u): return u  # Override to impose boundary conditions on the fluid
     
     def step_u(self, ff):
@@ -130,43 +121,62 @@ class FLUID(object):
         uuu[0]=a[0,0]*w[0]+a[0,1]*w[1]+a[0,2]*w[2]# Solve for LHS
         uuu[1]=a[1,0]*w[0]+a[1,1]*w[1]+a[1,2]*w[2]
         uuu[2]=a[2,0]*w[0]+a[2,1]*w[1]+a[2,2]*w[2]
-       
+        
+#         ppp=b[0]*w[0]+b[1]*w[1]+b[2]*w[2]
+#         ppp=np.fft.ifft(ppp,axis=3)
+#         ppp=np.fft.ifft(ppp,axis=2)
+#         ppp=np.fft.ifft(ppp,axis=1).real # Get pressure output
+        
         uuu=np.fft.ifft(uuu,axis=3)
         uuu=np.fft.ifft(uuu,axis=2)
         uuu=np.fft.ifft(uuu,axis=1).real # Get u at next timestep
         return uuu, uu
    
-
-  #### Methods for plotting and visualization
+  
     
-#     @property
-#     def vorticity(self):
-#         u, h, ip, im = self.u, self.h, self.ip, self.im
-#         ii = im+1
-# #         return (u[1,ip,:]-u[1,im,:]-u[0,:,ip]+u[0,:,im])/(2*h);
-#         vorticity=(u[1][np.meshgrid(ip, ii)]
-#                        -u[1][np.meshgrid(im,ii)]
-#                        -u[0][np.meshgrid(ii,ip)]
-#                        +u[0][np.meshgrid(ii,im)])/(2*self.h);
-#         return vorticity
-
-#     def show_vorticity(self):
-#         vorticity=self.vorticity
-#         dvorticity=(np.max(vorticity)-np.min(vorticity))/5;
-#         dvorticity = max(dvorticity, 0.1)  ## Catch error on 0 (or uniform) vorticity
-#         return plt.imshow(vorticity,  vmin=-2*dvorticity, vmax=2*dvorticity, origin='lower', extent=[0, self.L, 0, self.L])
-# #         plt.colorbar()
+    
+  #### Fluid domain properties  ####    
+    @property  # Grid Points
+    def N(self): return self._N
+    
+    
+    @property  # Grid spacing
+    def h(self): return self._h
+    
+    @property  # Box size
+    def L(self): return self._L
+    
+    @L.setter
+    def L(self, L):
+        self._L = float(L)
+        self._h = self.L/self.N
+        self.init_a()
+    
+    @property
+    def rho(self): return self._rho
+    
+    @rho.setter
+    def rho(self, rho):
+        self._rho = rho
+        self.init_a()
         
-#     def show_streamlines(self, ax, cmap=None,):
-#         X, Y = np.meshgrid(self.h*np.arange(self.N), self.h*np.arange(self.N))
-#         if cmap is None:
-#             stream = ax.streamplot(X, Y, self.u[0], self.u[1], color='black')
-#             return stream.lines, stream.arrows
-#         else:
-#             uu = np.sqrt(np.sum(self.u**2, axis=0))
-#             return plt.streamplot(X, Y, self.u[0], self.u[1], color=uu.transpose(), cmap=cmap)
-# #             plt.colorbar()
-            
+    @property
+    def mu(self): return self._mu
+    
+    @mu.setter
+    def mu(self, mu):
+        self._mu = mu
+        self.init_a()
+
+    @property
+    def dt(self): return self._dt
+    
+    @dt.setter
+    def dt(self, dt):
+        self._dt = dt
+        self.init_a()
+        
+        
 
         
         
