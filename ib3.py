@@ -7,13 +7,14 @@ class IB3(object):
 
     def __init__(self, X, N, h, dt, K=1., v=None):
         self.X = X     # Positions of boundary
+        self.v = v
         self.N = N     # Fluid domain properties                
         self.h = h
         self.dt = dt
         self.K = K      # Elastic stiffness
     
         self.Nb = np.shape(self.X)[0]  # number of boundary points
-        self.dtheta = 2*np.pi/np.sqrt(self.Nb)
+#         self.dtheta = 2*np.pi/np.sqrt(self.Nb)
 #         self.dtheta = 2*np.pi/self.Nb        # spacing of boundary points
 #         self.kp = (np.arange(self.Nb)+1)%self.Nb       # IB index shifted left
 #         self.km = np.arange(self.Nb)-1       # IB index shifted right
@@ -76,8 +77,8 @@ class IB3(object):
         N, Nb, h = self.N, self.Nb, self.h
         W = np.zeros([N, N, N])
         
-        c=self.dtheta/h**3;
-#         c=1./h**3;
+#         c=self.dtheta/h**3;
+        c=1./h**3;
         f=np.zeros([3,N,N,N]);
         s=X/float(h)
         i=np.array(np.floor(s), dtype=int)
