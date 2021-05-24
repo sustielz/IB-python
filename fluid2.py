@@ -30,26 +30,14 @@ class FLUID(object):
         a = np.zeros([2,2,N,N])
         a[0, 0] = 1
         a[1, 1] = 1
-
-        for m1 in range(N):
-            for m2 in range(N):
-                if not ((m1==0 or (N%2==0 and m1==int(N/2))) and (m2==0 or (N%2==0 and m2==int(N/2)))):
-                    t=(2*np.pi/N)*np.array([m1, m2])
-                    s=np.sin(t);
-
-                    #### Note matrix multiplication might matter here
-                    ss=np.outer(s, s)/np.inner(s, s)
-
-                    #     a(m1+1,m2+1,:,:)=a(m1+1,m2+1,:,:)-(s*s')/(s'*s)
-                    a[0,0,m1,m2]-=ss[0,0]
-                    a[0,1,m1,m2]-=ss[0,1]
-                    a[1,0,m1,m2]-=ss[1,0]
-                    a[1,1,m1,m2]-=ss[1,1]
-
         for m1 in range(N):
             for m2 in range(N):
                 t=(np.pi/N)*np.array([m1, m2])
-                s=np.sin(t)
+                if m1*abs(m1-N/2) + m2*abs(m2-N/2) > 1e-6: 
+                    s=np.sin(2*t)
+                    ss=np.outer(s, s)/np.inner(s, s)
+                    a[:,:,m1,m2]-=ss
+                s = np.sin(t)
                 a[:,:,m1,m2] /= (1+(self.dt/2)*(self.mu/self.rho)*(4/(self.h**2))*(np.inner(s, s)))
         self.a = a
     
