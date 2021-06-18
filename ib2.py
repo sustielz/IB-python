@@ -5,24 +5,43 @@ import matplotlib.pyplot as plt
     
 class IB2(object):
 
+    
+    @property
+    def Nb(self): return self._Nb
+    
+    @Nb.setter
+    def Nb(self, Nb): 
+        self._Nb = Nb
+        self.kp = (np.arange(Nb)+1)%Nb       # IB index shifted left
+        self.km = np.arange(Nb)-1            # IB index shifted right
+    
+    @property
+    def dtheta(self): return 2*np.pi/self.Nb
+    
     def __init__(self, X, N, h, dt, K=1.):
         self.X = X     # Positions of boundary
+        self.Nb = np.shape(X)[0]             # number of boundary points       
+
         self.N = N     # Fluid domain properties                
         self.h = h
         self.dt = dt
         self.K = K      # Elastic stiffness
+        self.Force = self.Force_spring
     
-        self.Nb = np.shape(X)[0]             # number of boundary points       
-        self.dtheta = 2*np.pi/self.Nb        # spacing of boundary points
-        self.kp = (np.arange(self.Nb)+1)%self.Nb       # IB index shifted left
-        self.km = np.arange(self.Nb)-1       # IB index shifted right
     
     def step_XX(self, u): self.XX=self.X+0.5*self.dt*self.interp(u,self.X) # Euler step to midpoint
        
     def step_X(self, uu): self.X+=self.dt*self.interp(uu,self.XX) # full step using midpoint velocity            
     
     @property
-    def ff(self): return self.vec_spread(self.Force(self.XX), self.XX) # Force at midpoint
+    def ff(self): 
+        self.FF = self.Force(self.XX)
+        return self.vec_spread(self.FF, self.XX) # Force at midpoint
+    
+    # elastic stretching force
+    def Force_spring(self, X):
+        kp, km, dtheta, K = self.kp, self.km, self.dtheta, self.K
+        return K*(X[kp]+X[km]-2*X)/(dtheta**2)
     
     def phi(self, r):     ## Discrete dirac delta function
         w = np.zeros(4)
@@ -72,10 +91,7 @@ class IB2(object):
 #         print(max(f))
         return f 
 
-    # elastic stretching force
-    def Force(self, X):
-        kp, km, dtheta, K = self.kp, self.km, self.dtheta, self.K
-        return K*(X[kp]+X[km]-2*X)/(dtheta**2)
+
     
 
   #### Methods for visualization/plotting

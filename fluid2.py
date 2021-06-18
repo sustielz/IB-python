@@ -4,21 +4,37 @@ import matplotlib.pyplot as plt
 #### 2D Fluid solver using fft. This is more up-to-date than fluid.py
 class FLUID(object):
   
+  #### Fluid domain properties ####    
+    @property  # Grid Points
+    def N(self): return self._N
+    
+    @property  # Grid spacing
+    def h(self): return self._h
+    
+    @property  # Box size
+    def L(self): return self._L
+    
+    @L.setter
+    def L(self, L):
+        self._L = float(L)
+        self._h = self.L/self.N
+
+            
     def __init__(self, N=64, L=1., rho=1., mu=.01, dt=.01):
         self._N = N 
-        self._L = float(L) 
-        self._h = self._L/self._N
-        self._rho = rho  # Fluid density
-        self._mu = mu    # viscosity 
-        self._dt = dt    # Time step        
-        
-        self.init_a()   # Matrix for use in fluid solver
-        
-        self.u = np.zeros([2,N,N]) #Fluid velocity
+        self.L = L 
         self.ip = (np.arange(N)+1)%N   # Grid index shifted left
         self.im = np.arange(N)-1   # Grid index shifted right
-        self.t = 0      # Time
+                            
+        self.u = np.zeros([2,N,N]) #Fluid velocity
+        self.rho = rho  # Fluid density
+        self.mu = mu    # viscosity 
         
+        self.t = 0      # Time
+        self.dt = dt    # Time step        
+        
+        self.init_a()   # Matrix for use in fluid solver
+    
     def boundary(self, u): return u  # Override to impose boundary conditions on the fluid
     
     def step_u(self, ff):
@@ -41,16 +57,17 @@ class FLUID(object):
                 a[:,:,m1,m2] /= (1+(self.dt/2)*(self.mu/self.rho)*(4/(self.h**2))*(np.inner(s, s)))
         self.a = a
     
+    
     # Second order centered Laplacian
     def laplacian(self, u): 
         im, ip, h = self.ip, self.im, self.h
-        w=(u[:,ip,:]+u[:,im,:]+u[:,:,ip]+u[:,:,im]-4*u)/(h**2)
+        w=(u[:,ip,:]+u[:,im,:]+u[:,:,ip]+u[:,:,im]-4*u)/(h**2);
         return w
    
     def skew(self, u):
         w=u*1. #note that this is done only to make w the same size as u
-        w[0]=self.sk(u,u[0])
-        w[1]=self.sk(u,u[1])
+        w[0]=self.sk(u,u[0]);
+        w[1]=self.sk(u,u[1]);
         return w
     
     def sk(self, u, g):
@@ -59,7 +76,7 @@ class FLUID(object):
         return ((u[0][ip,:]+u[0])*g[ip,:]
                 -(u[0][im,:]+u[0])*g[im,:]
                 +(u[1][:,ip]+u[1])*g[:,ip]
-                -(u[1][:,im]+u[1])*g[:,im])/(4*h)
+                -(u[1][:,im]+u[1])*g[:,im])/(4*h);
 
     # Time step the fluid
     def fluid(self, u, ff):
@@ -96,49 +113,9 @@ class FLUID(object):
         vorticity=(u[1][np.meshgrid(ip, ii)]
                        -u[1][np.meshgrid(im,ii)]
                        -u[0][np.meshgrid(ii,ip)]
-                       +u[0][np.meshgrid(ii,im)])/(2*self.h)
+                       +u[0][np.meshgrid(ii,im)])/(2*self.h);
         return vorticity
 
-  
-  #### Fluid domain properties  ####    
-    @property  # Grid Points
-    def N(self): return self._N
-    
-    
-    @property  # Grid spacing
-    def h(self): return self._h
-    
-    @property  # Box size
-    def L(self): return self._L
-    
-    @L.setter
-    def L(self, L):
-        self._L = float(L)
-        self._h = self.L/self.N
-        self.init_a()
-    
-    @property
-    def rho(self): return self._rho
-    
-    @rho.setter
-    def rho(self, rho):
-        self._rho = rho
-        self.init_a()
-        
-    @property
-    def mu(self): return self._mu
-    
-    @mu.setter
-    def mu(self, mu):
-        self._mu = mu
-        self.init_a()
 
-    @property
-    def dt(self): return self._dt
-    
-    @dt.setter
-    def dt(self, dt):
-        self._dt = dt
-        self.init_a()
         
         
