@@ -13,13 +13,16 @@ from ib3 import IB3
 
 
 class PIB3(IB3):
-    def __init__(self, X, N, h, dt, K=1., Kp=None):
+    
+    @property
+    def dtheta(self): return self.M/self.Nb
+    
+    def __init__(self, X, N, h, dt, K=1., M=0.01, Kp=None):
         super(PIB3, self).__init__(X, N, h, dt, K=K)
         self.Kp = Kp or K
-#         self.dtheta = 1.
         self.Y = self.X.copy()    #### massive points Y initially coincide with fluid markers X
         self.V = self.Y*0.
-        self.M = 0.01     
+        self.M = M     
 
         
     def step_XX(self, u): 

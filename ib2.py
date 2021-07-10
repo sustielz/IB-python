@@ -12,11 +12,12 @@ class IB2(object):
     @Nb.setter
     def Nb(self, Nb): 
         self._Nb = Nb
+        self._dtheta = 2*np.pi/self.Nb
         self.kp = (np.arange(Nb)+1)%Nb       # IB index shifted left
         self.km = np.arange(Nb)-1            # IB index shifted right
     
     @property
-    def dtheta(self): return 2*np.pi/self.Nb
+    def dtheta(self): return self._dtheta
     
     def __init__(self, X, N, h, dt, K=1.):
         self.X = X     # Positions of boundary
@@ -54,8 +55,6 @@ class IB2(object):
 
     def interp(self, u, X):      ## Interpolate boundary velocity U from fluid velocity u
         N, Nb, h = self.N, self.Nb, self.h
-        W = np.zeros([N, N])
-
         U=np.zeros([Nb,2])
         s=X/float(h)
         i=np.array(np.floor(s), dtype=int)
@@ -71,9 +70,7 @@ class IB2(object):
         return U
     
     def vec_spread(self, F, X):   ## Spread boundary force F onto fluid domain ff
-        N, Nb, h = self.N, self.Nb, self.h
-        W = np.zeros([N, N])
-        
+        N, Nb, h = self.N, self.Nb, self.h        
         c=self.dtheta/h**2;
         f=np.zeros([2,N,N]);
         s=X/float(h)

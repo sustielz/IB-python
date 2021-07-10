@@ -37,8 +37,6 @@ class IB3(object):
 
     def interp(self, u, X):      ## Interpolate boundary velocity U from fluid velocity u
         N, Nb, h = self.N, self.Nb, self.h
-        W = np.zeros([N, N, N])
-
         U=np.zeros([Nb,3])
         s=X/float(h)
         i=np.array(np.floor(s), dtype=int)
@@ -74,9 +72,7 @@ class IB3(object):
         return U
     
     def vec_spread(self, F, X):   ## Spread boundary force F onto fluid domain ff
-        N, Nb, h = self.N, self.Nb, self.h
-        W = np.zeros([N, N, N])
-        
+        N, Nb, h = self.N, self.Nb, self.h        
 #         c=self.dtheta/h**3;
         c=1./h**3;
         f=np.zeros([3,N,N,N]);

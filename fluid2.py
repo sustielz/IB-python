@@ -61,13 +61,13 @@ class FLUID(object):
     # Second order centered Laplacian
     def laplacian(self, u): 
         im, ip, h = self.ip, self.im, self.h
-        w=(u[:,ip,:]+u[:,im,:]+u[:,:,ip]+u[:,:,im]-4*u)/(h**2);
+        w=(u[:,ip,:]+u[:,im,:]+u[:,:,ip]+u[:,:,im]-4*u)/(h**2)
         return w
    
     def skew(self, u):
         w=u*1. #note that this is done only to make w the same size as u
-        w[0]=self.sk(u,u[0]);
-        w[1]=self.sk(u,u[1]);
+        w[0]=self.sk(u,u[0])
+        w[1]=self.sk(u,u[1])
         return w
     
     def sk(self, u, g):
@@ -76,7 +76,7 @@ class FLUID(object):
         return ((u[0][ip,:]+u[0])*g[ip,:]
                 -(u[0][im,:]+u[0])*g[im,:]
                 +(u[1][:,ip]+u[1])*g[:,ip]
-                -(u[1][:,im]+u[1])*g[:,im])/(4*h);
+                -(u[1][:,im]+u[1])*g[:,im])/(4*h)
 
     # Time step the fluid
     def fluid(self, u, ff):
@@ -109,11 +109,11 @@ class FLUID(object):
     def vorticity(self):
         u, h, ip, im = self.u, self.h, self.ip, self.im
         ii = im+1
-#         return (u[1,ip,:]-u[1,im,:]-u[0,:,ip]+u[0,:,im])/(2*h);
+#         return (u[1,ip,:]-u[1,im,:]-u[0,:,ip]+u[0,:,im])/(2*h)
         vorticity=(u[1][np.meshgrid(ip, ii)]
                        -u[1][np.meshgrid(im,ii)]
                        -u[0][np.meshgrid(ii,ip)]
-                       +u[0][np.meshgrid(ii,im)])/(2*self.h);
+                       +u[0][np.meshgrid(ii,im)])/(2*self.h)
         return vorticity
 
 

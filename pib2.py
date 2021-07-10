@@ -13,14 +13,16 @@ from ib2 import IB2
 
 
 class PIB2(IB2):
-    def __init__(self, X, N, h, dt, K=1., Kp=None):
+    
+    @property
+    def dtheta(self): return self.M/self.Nb
+    
+    def __init__(self, X, N, h, dt, K=1., M=0.01, Kp=None):
         super(PIB2, self).__init__(X, N, h, dt, K=K)
         self.Kp = Kp or K
-#         self.dtheta = 1.
         self.Y = self.X.copy()    #### massive points Y initially coincide with fluid markers X
         self.V = self.Y*0.
-        self.M = 0.01     
-
+        self.M = M
         
     def step_XX(self, u): 
         super(PIB2, self).step_XX(u)
@@ -43,9 +45,6 @@ class PIB2(IB2):
         out = Y*0.
         out[1] -= pib2.M*980
         return out
-        
-#         return -980*np.array([0., 1.])
-#         return -9.8*np.array([0., 1.])
             
     def pForce(self, Y, X): return self.Kp*(Y-X)
     

@@ -18,7 +18,7 @@ def iterate(fluid, solids):
         
 #### Geometry
 def CIRCLE(RAD=1., POS=(0.,0.), Nb=400):  
-    theta = np.linspace(0, 2*np.pi, Nb+1)[:-1]
+    theta = np.linspace(0, 2*np.pi, Nb+1)[:-1] + 0.1
     return RAD*np.stack([np.cos(theta), np.sin(theta)], axis=1) + POS
 
 def FULL_CIRCLE(RAD=1., POS=(0.,0.), n=200, phi=0*np.pi/3):
