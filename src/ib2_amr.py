@@ -1,7 +1,7 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 
-from ib2 import IB2         
+from .ib2 import IB2         
 
 #### Class for a 2D immersed boundary with surface tension in fluid. In addition to replacing the force functional, 
 #### surface tension also requires even spacing of boundary points. This is accomplished here using 'virtual springs', which

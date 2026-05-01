@@ -82,8 +82,8 @@ class FLUID(object):
     def fluid(self, u, ff):
         self.t += self.dt
         self.boundary(u)
-        uu = np.zeros(np.shape(u), dtype=np.complex)
-        uuu = np.zeros(np.shape(u), dtype=np.complex)
+        uu = np.zeros(np.shape(u), dtype=complex)
+        uuu = np.zeros(np.shape(u), dtype=complex)
         
         a, dt, rho, mu = self.a, self.dt, self.rho, self.mu
         w=u-(dt/2)*self.skew(u)+(dt/(2*rho))*ff; # Get RHS

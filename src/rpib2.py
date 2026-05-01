@@ -1,7 +1,7 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 
-from ib2 import IB2
+from .ib2 import IB2
 
 
 #### A penalty immersed boundary method for assigning mass density to a fluid. 

@@ -1,7 +1,7 @@
 import numpy as np 
 import matplotlib.pyplot as plt
 
-from ib2 import IB2         
+from .ib2 import IB2         
 
 #### Class for an immersed boundary in a fluid. The fluid solver and interpolation/spreading use a staggered-grid (MAC) scheme
 #### to improve volume conservation.
